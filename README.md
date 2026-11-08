@@ -1,3 +1,8 @@
+## Download
+
+**[Download Dynamic Island for Windows](https://github.com/has990/dynamic-island-windows/releases/latest)**
+
+Download the Windows installer from the latest GitHub Release and follow the installation instructions.
 # Dynamic Island for Windows
 
 A lightweight Windows desktop overlay inspired by the Dynamic Island concept. Built with Electron, HTML, CSS, JavaScript, and PowerShell.
