@@ -17,11 +17,15 @@ A lightweight Windows desktop overlay inspired by the Dynamic Island concept. Bu
 
 ## Screenshots
 
-Add your own screenshots or a short GIF here before publishing. Suggested files:
+### Collapsed Interface
+![Collapsed Interface](assets/screenshot-collapsed.png)
 
-- `assets/screenshot-collapsed.png`
-- `assets/screenshot-expanded.png`
-- `assets/demo.gif`
+### Expanded Interface
+![Expanded Interface](assets/screenshot-expanded.png)
+
+## Demo
+
+![Dynamic Island Demo](assets/demo.gif)
 
 ## Requirements
 
