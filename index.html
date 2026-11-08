@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --ink: #000; --ivory: #efe6d2; --brass: #b08d57; --mute: rgba(239,230,210,.55);
+    --serif: "Cormorant Garamond", "Constantia", "Palatino Linotype", Georgia, serif;
+  }
+  * { margin: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  html, body { background: transparent; height: 100%; overflow: hidden; font-family: var(--serif); color: var(--ivory); }
+  .stage { display: flex; justify-content: center; }
+
+  .pill { width: 150px; height: 36px; background: var(--ink); border-radius: 0 0 22px 22px; overflow: hidden; position: relative;
+    transition: width .55s cubic-bezier(.2,.9,.25,1), height .55s cubic-bezier(.2,.9,.25,1), border-radius .55s cubic-bezier(.2,.9,.25,1), box-shadow .4s; }
+  .pill.greet:not(.open) { width: 320px; height: 112px; border-radius: 0 0 32px 32px; }
+  .pill.open { width: 440px; height: 186px; border-radius: 0 0 34px 34px;
+    box-shadow: 0 0 0 .5px color-mix(in srgb, var(--brass) 45%, transparent), 0 18px 40px rgba(0,0,0,.45); }
+
+  /* eyes */
+  .eyes { position: absolute; top: 9px; left: 50%; display: flex; gap: 22px;
+    transform: translateX(-50%) translate(var(--ex, 0px), var(--ey, 0px));
+    transition: opacity .25s, transform .12s ease-out, top .4s; }
+  .eye { width: 8px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 1px rgba(255,255,255,.75);
+    animation: blink 6s infinite; transition: width .3s, height .3s, background .3s; }
+  .pill.playing .eye { animation: blink 6s infinite, sway 2.4s ease-in-out infinite; }
+  .pill.open .eyes { opacity: 0; pointer-events: none; }
+  @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
+  @keyframes sway { 50% { translate: 0 2px; } }
+
+  /* greeting: happy eyes, smile, hello */
+  .smile { position: absolute; top: 46px; left: 50%; width: 30px; height: 12px; margin-left: -15px; border-bottom: 2.5px solid #fff;
+    border-radius: 0 0 30px 30px; box-shadow: 0 5px 8px -5px rgba(255,255,255,.8); opacity: 0; transition: opacity .3s; }
+  .hello { position: absolute; top: 72px; left: 0; right: 0; text-align: center; font-style: italic; font-size: 21px; letter-spacing: .01em; opacity: 0; transition: opacity .3s; }
+  .pill.greet:not(.open) .eyes { top: 20px; }
+  .pill.greet:not(.open) .eye { height: 9px; width: 15px; background: transparent; border-top: 3px solid #fff; border-radius: 15px 15px 0 0; animation: none; }
+  .pill.greet:not(.open) .smile, .pill.greet:not(.open) .hello { opacity: 1; transition: opacity .4s .35s; }
+
+  /* expanded content */
+  .content { position: absolute; inset: 0; padding: 20px 26px 14px; opacity: 0; transition: opacity .2s; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+  .pill.open .content { opacity: 1; transition: opacity .35s .22s; pointer-events: auto; }
+  .top { display: flex; align-items: center; gap: 16px; }
+  .crest { width: 52px; height: 52px; border-radius: 10px; flex: none; position: relative; overflow: hidden; display: grid; place-items: center;
+    border: .5px solid var(--brass); background: color-mix(in srgb, var(--brass) 22%, #000); font-style: italic; font-size: 24px; color: var(--brass); }
+  .crest img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .meta { min-width: 0; flex: 1; }
+  .title { font-size: 21px; font-style: italic; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .artist { font-size: 13px; color: var(--mute); letter-spacing: .06em; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .clock { text-align: right; font-size: 24px; font-weight: 500; line-height: 1; }
+  .date { font-size: 11px; color: var(--mute); letter-spacing: .08em; margin-top: 4px; }
+  .rule { height: .5px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brass) 55%, transparent), transparent); }
+
+  .mid { display: flex; align-items: center; justify-content: space-between; }
+  .vol { display: flex; align-items: center; gap: 8px; width: 118px; color: var(--mute); }
+  .vol svg { width: 15px; height: 15px; flex: none; }
+  .side { width: 118px; text-align: right; font-size: 12px; color: var(--mute); letter-spacing: .05em; }
+  .controls { display: flex; align-items: center; gap: 26px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; background: transparent; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 2px; border-radius: 2px; background: linear-gradient(to right, var(--brass) var(--v, 50%), rgba(239,230,210,.2) var(--v, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; margin-top: -4px; border-radius: 50%; background: var(--ivory); box-shadow: 0 0 0 .5px var(--brass); }
+
+  button { background: none; border: 0; color: var(--ivory); cursor: pointer; padding: 4px; display: grid; place-items: center; transition: color .2s, transform .15s; font-family: var(--serif); }
+  button:hover { color: var(--brass); }
+  button:active { transform: scale(.9); }
+  button:focus-visible, input:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: 4px; }
+  svg { width: 18px; height: 18px; fill: currentColor; }
+  #play svg { width: 22px; height: 22px; }
+  .dots { display: flex; gap: 10px; align-items: center; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; padding: 0; background: var(--c); opacity: .75; }
+  .dot:hover { opacity: 1; }
+  .dot.on { opacity: 1; box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--c); }
+  .err { flex: 1; min-width: 0; text-align: center; font-size: 10px; color: #c9806f; padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #quit { font-size: 12px; color: var(--mute); letter-spacing: .05em; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: .01s !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="pill" id="pill">
+    <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+    <div class="smile"></div>
+    <div class="hello" id="hello"></div>
+    <div class="content">
+      <div class="top">
+        <div class="crest"><span id="crest">♪</span><img id="art" alt=""></div>
+        <div class="meta">
+          <div class="title" id="title">Nothing playing</div>
+          <div class="artist" id="artist">Play something to begin</div>
+        </div>
+        <div><div class="clock" id="clock"></div><div class="date" id="date"></div></div>
+      </div>
+      <div class="rule"></div>
+      <div class="mid">
+        <div class="vol">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM16 8.5a5 5 0 0 1 0 7l-1.2-1.2a3.3 3.3 0 0 0 0-4.6z"/></svg>
+          <input type="range" id="vol" min="0" max="100" value="50" aria-label="Volume">
+        </div>
+        <div class="controls">
+          <button id="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+          <button id="play" aria-label="Play or pause"></button>
+          <button id="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5l11 7L4 19z"/></svg></button>
+        </div>
+        <div class="side" id="battery"></div>
+      </div>
+      <div class="foot">
+        <div class="dots" id="dots" role="group" aria-label="Accent color"></div>
+        <div id="err" class="err"></div>
+        <button id="quit" aria-label="Quit">Quit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Browser-preview fallback: when not inside Electron, fake the bridge so the page still works.
+if (!window.island) {
+  document.documentElement.style.background = '#3a1f1f';
+  let playing = true, cb = null;
+  const art = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a3b3b"/><stop offset="1" stop-color="#1c0d0d"/></linearGradient></defs><rect width="10" height="10" fill="url(#g)"/><circle cx="5" cy="5" r="2.2" fill="none" stroke="#b08d57" stroke-width=".3"/></svg>');
+  const send = () => cb && cb({ title: 'Clair de Lune', artist: 'Claude Debussy', playing, vol: 0.5, art });
+  window.island = {
+    onMedia: f => { cb = f; setTimeout(send, 500); },
+    onCursor: f => document.addEventListener('mousemove', e => f({ x: e.clientX - innerWidth / 2, y: e.clientY - 18 })),
+    hover() {}, quit() {},
+    control: a => { if (a === 'play') { playing = !playing; send(); } }
+  };
+}
+</script>
+<script>
+const NAME = 'Hasnain';           // change this to whatever you want the greeting to say
+const $ = id => document.getElementById(id);
+const pill = $('pill');
+const ICON = {
+  play: '<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+};
+$('play').innerHTML = ICON.play;
+
+// open / close
+let closeTimer;
+const open = () => { clearTimeout(closeTimer); pill.classList.add('open'); };
+const close = () => { closeTimer = setTimeout(() => pill.classList.remove('open'), 350); };
+pill.addEventListener('mouseenter', () => { island.hover(true); open(); });
+pill.addEventListener('mouseleave', () => { island.hover(false); close(); });
+
+// greeting on launch
+(function greet() {
+  const h = new Date().getHours();
+  $('hello').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ', ' + NAME;
+  setTimeout(() => { pill.classList.add('greet'); setTimeout(() => pill.classList.remove('greet'), 4500); }, 1200);
+})();
+
+// eyes follow the cursor
+island.onCursor(({ x, y }) => {
+  pill.style.setProperty('--ex', Math.tanh(x / 350) * 10 + 'px');
+  pill.style.setProperty('--ey', Math.tanh(y / 300) * 3.5 + 'px');
+});
+
+// volume slider
+const vol = $('vol');
+let dragging = false, lastSend = 0;
+const paint = v => vol.style.setProperty('--v', v + '%');
+const sendVol = () => island.control('vol ' + (vol.value / 100).toFixed(2));
+vol.addEventListener('pointerdown', () => dragging = true);
+addEventListener('pointerup', () => dragging = false);
+vol.addEventListener('input', () => { paint(vol.value); const t = Date.now(); if (t - lastSend > 80) { lastSend = t; sendVol(); } });
+vol.addEventListener('change', sendVol);
+paint(50);
+
+// now playing + album art
+let lastTrack = '';
+island.onMedia(m => {
+  m = m || {};
+  const on = !!m.title;
+  pill.classList.toggle('playing', on && m.playing);
+  $('err').textContent = m.err ? m.err.slice(0, 80) : ''; $('err').title = m.err || '';
+  $('title').textContent = on ? m.title : 'Nothing playing';
+  $('artist').textContent = on ? (m.artist || 'Unknown artist') : (m.err ? 'Media: ' + m.err.slice(0, 60) : 'Play something to begin');
+  $('crest').textContent = on ? m.title.trim().charAt(0).toUpperCase() : '♪';
+  $('art').style.display = on && m.art ? 'block' : 'none';
+  if (on && m.art) $('art').src = m.art;
+  $('play').innerHTML = on && m.playing ? ICON.pause : ICON.play;
+  if (typeof m.vol === 'number' && !dragging) { vol.value = Math.round(m.vol * 100); paint(vol.value); }
+  const key = on ? m.title + m.artist : '';
+  if (on && key !== lastTrack) { open(); setTimeout(() => { if (!pill.matches(':hover')) pill.classList.remove('open'); }, 3800); }
+  lastTrack = key;
+});
+$('prev').onclick = () => island.control('prev');
+$('play').onclick = () => island.control('play');
+$('next').onclick = () => island.control('next');
+$('quit').onclick = () => island.quit();
+
+// accent colors
+const ACCENTS = [['#b08d57', 'Brass'], ['#5f9a7a', 'Racing green'], ['#c07a82', 'Claret rose'], ['#7d97c9', 'Sapphire'], ['#cfc8b4', 'Champagne']];
+const dots = ACCENTS.map(([c, name], i) => {
+  const b = document.createElement('button');
+  b.className = 'dot'; b.style.setProperty('--c', c); b.title = name; b.setAttribute('aria-label', name + ' accent');
+  b.onclick = () => setAccent(i);
+  $('dots').appendChild(b); return b;
+});
+function setAccent(i) {
+  document.documentElement.style.setProperty('--brass', ACCENTS[i][0]);
+  dots.forEach((d, j) => d.classList.toggle('on', i === j));
+  try { localStorage.setItem('accent', i); } catch {}
+}
+let saved = 0; try { saved = +localStorage.getItem('accent') || 0; } catch {}
+setAccent(saved);
+
+// clock + date
+function tick() {
+  const d = new Date();
+  $('clock').textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  $('date').textContent = d.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
+}
+tick(); setInterval(tick, 10000);
+
+// battery
+if (navigator.getBattery) navigator.getBattery().then(b => {
+  const up = () => $('battery').textContent = Math.round(b.level * 100) + '%' + (b.charging ? ' charging' : '');
+  up(); b.onlevelchange = b.onchargingchange = up;
+});
+</script>
+</body>
+</html>
