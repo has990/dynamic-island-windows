@@ -8,37 +8,62 @@
     --serif: "Cormorant Garamond", "Constantia", "Palatino Linotype", Georgia, serif;
   }
   * { margin: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  input[type=text] { -webkit-user-select: text; user-select: text; }
   html, body { background: transparent; height: 100%; overflow: hidden; font-family: var(--serif); color: var(--ivory); }
   .stage { display: flex; justify-content: center; }
 
   .pill { width: 150px; height: 36px; background: var(--ink); border-radius: 0 0 22px 22px; overflow: hidden; position: relative;
     transition: width .55s cubic-bezier(.2,.9,.25,1), height .55s cubic-bezier(.2,.9,.25,1), border-radius .55s cubic-bezier(.2,.9,.25,1), box-shadow .4s; }
   .pill.greet:not(.open) { width: 320px; height: 112px; border-radius: 0 0 32px 32px; }
-  .pill.open { width: 440px; height: 186px; border-radius: 0 0 34px 34px;
+  .pill.sleepy:not(.open) { width: 320px; height: 98px; border-radius: 0 0 32px 32px; }
+  .pill.open { width: 440px; height: 200px; border-radius: 0 0 34px 34px;
     box-shadow: 0 0 0 .5px color-mix(in srgb, var(--brass) 45%, transparent), 0 18px 40px rgba(0,0,0,.45); }
+
+  .pill.open.show-settings { height: 268px; }
 
   /* eyes */
   .eyes { position: absolute; top: 9px; left: 50%; display: flex; gap: 22px;
     transform: translateX(-50%) translate(var(--ex, 0px), var(--ey, 0px));
     transition: opacity .25s, transform .12s ease-out, top .4s; }
-  .eye { width: 8px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 1px rgba(255,255,255,.75);
-    animation: blink 6s infinite; transition: width .3s, height .3s, background .3s; }
-  .pill.playing .eye { animation: blink 6s infinite, sway 2.4s ease-in-out infinite; }
+  .eye { width: 8px; height: 15px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 calc(8px + var(--pulse, 0) * 14px) 1px rgba(255,255,255,calc(.75 + var(--pulse, 0) * .25));
+    scale: calc(1 + var(--pulse, 0) * .4);
+    animation: blink 6s infinite; transition: width .3s, height .3s, background .3s, opacity .3s; }
+  .pill.playing .eye { animation: blink 6s infinite, sway 2.4s ease-in-out infinite, beat 1.1s ease-in-out infinite; }
+  .pill.playing.audio .eye { animation: blink 6s infinite, sway 2.4s ease-in-out infinite; }
+  .pill.playing.noreact .eye { animation: blink 6s infinite; }
+  @keyframes beat { 50% { scale: 1.2; } }
   .pill.open .eyes { opacity: 0; pointer-events: none; }
+  .pill.lowbat:not(.open):not(.greet):not(.sleepy) .eye { height: 10px; opacity: .7; }
   @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
   @keyframes sway { 50% { translate: 0 2px; } }
 
-  /* greeting: happy eyes, smile, hello */
+  /* peeks: greeting / charging (happy), low battery (sleepy) */
   .smile { position: absolute; top: 46px; left: 50%; width: 30px; height: 12px; margin-left: -15px; border-bottom: 2.5px solid #fff;
     border-radius: 0 0 30px 30px; box-shadow: 0 5px 8px -5px rgba(255,255,255,.8); opacity: 0; transition: opacity .3s; }
   .hello { position: absolute; top: 72px; left: 0; right: 0; text-align: center; font-style: italic; font-size: 21px; letter-spacing: .01em; opacity: 0; transition: opacity .3s; }
-  .pill.greet:not(.open) .eyes { top: 20px; }
+  .pill.greet:not(.open) .eyes, .pill.sleepy:not(.open) .eyes { top: 20px; }
   .pill.greet:not(.open) .eye { height: 9px; width: 15px; background: transparent; border-top: 3px solid #fff; border-radius: 15px 15px 0 0; animation: none; }
-  .pill.greet:not(.open) .smile, .pill.greet:not(.open) .hello { opacity: 1; transition: opacity .4s .35s; }
+  .pill.sleepy:not(.open) .eye { height: 8px; width: 15px; background: transparent; border-bottom: 3px solid #fff; border-radius: 0 0 15px 15px; animation: none; }
+  .pill.greet:not(.open) .smile, .pill.greet:not(.open) .hello, .pill.sleepy:not(.open) .hello { opacity: 1; transition: opacity .4s .35s; }
+  .pill.sleepy:not(.open) .hello { top: 56px; }
+
+  /* live song bar: while music plays the island stays out: art on the left, eyes in the middle, bars on the right */
+  .lart { position: absolute; left: 10px; top: 6px; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .leq { position: absolute; right: 16px; top: 10px; height: 16px; display: flex; align-items: flex-end; gap: 3px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .leq i { width: 3px; height: 100%; border-radius: 2px; background: var(--brass); transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
+  .leq i:nth-child(2) { animation-duration: .8s; animation-delay: -.3s; }
+  .leq i:nth-child(3) { animation-duration: 1.2s; animation-delay: -.6s; }
+  .leq i:nth-child(4) { animation-duration: .9s; animation-delay: -.15s; }
+  @keyframes eq { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+  .pill.live:not(.open):not(.greet):not(.sleepy) { width: 250px; }
+  .pill.live:not(.open):not(.greet):not(.sleepy) .lart, .pill.live:not(.open):not(.greet):not(.sleepy) .leq { opacity: 1; transition: opacity .4s .25s; }
 
   /* expanded content */
-  .content { position: absolute; inset: 0; padding: 20px 26px 14px; opacity: 0; transition: opacity .2s; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+  .content, .settings { position: absolute; inset: 0; padding: 20px 26px 14px; }
+  .content { opacity: 0; transition: opacity .2s; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
   .pill.open .content { opacity: 1; transition: opacity .35s .22s; pointer-events: auto; }
+  .pill.show-settings .content { display: none; }
   .top { display: flex; align-items: center; gap: 16px; }
   .crest { width: 52px; height: 52px; border-radius: 10px; flex: none; position: relative; overflow: hidden; display: grid; place-items: center;
     border: .5px solid var(--brass); background: color-mix(in srgb, var(--brass) 22%, #000); font-style: italic; font-size: 24px; color: var(--brass); }
@@ -49,6 +74,16 @@
   .clock { text-align: right; font-size: 24px; font-weight: 500; line-height: 1; }
   .date { font-size: 11px; color: var(--mute); letter-spacing: .08em; margin-top: 4px; }
   .rule { height: .5px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brass) 55%, transparent), transparent); }
+  .content:not(.noprog) .rule { display: none; }
+  .content.noprog .prog { display: none; }
+
+  /* progress */
+  .prog { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--mute); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+  .prog span { width: 32px; }
+  .prog span:last-child { text-align: right; }
+  .bar { flex: 1; height: 12px; display: flex; align-items: center; position: relative; cursor: pointer; }
+  .bar::before { content: ''; position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px; background: rgba(239,230,210,.2); }
+  .bar i { position: relative; display: block; height: 2px; width: 0; border-radius: 2px; background: var(--brass); }
 
   .mid { display: flex; align-items: center; justify-content: space-between; }
   .vol { display: flex; align-items: center; gap: 8px; width: 118px; color: var(--mute); }
@@ -73,6 +108,22 @@
   .dot.on { opacity: 1; box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--c); }
   .err { flex: 1; min-width: 0; text-align: center; font-size: 10px; color: #c9806f; padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #quit { font-size: 12px; color: var(--mute); letter-spacing: .05em; }
+  #gear svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; color: var(--mute); }
+  #gear:hover svg { color: var(--brass); }
+
+  /* settings */
+  .settings { display: none; flex-direction: column; gap: 14px; padding-top: 22px; animation: fade .3s; }
+  .pill.open.show-settings .settings { display: flex; }
+  @keyframes fade { from { opacity: 0; } }
+  .shead { display: flex; justify-content: space-between; align-items: center; }
+  .stitle { font-size: 21px; font-style: italic; }
+  .field { display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--mute); letter-spacing: .05em; }
+  .field input { flex: 1; background: transparent; border: 0; border-bottom: .5px solid var(--brass); color: var(--ivory); font: italic 18px var(--serif); padding: 2px 0; outline: none; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 20px; }
+  .sw { display: flex; align-items: center; justify-content: flex-start; gap: 10px; font-size: 14px; padding: 2px; color: var(--ivory); }
+  .sw i { width: 28px; height: 15px; border-radius: 8px; border: .5px solid var(--brass); position: relative; flex: none; }
+  .sw i::after { content: ''; position: absolute; top: 2.5px; left: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--mute); transition: left .2s, background .2s; }
+  .sw.on i::after { left: 15px; background: var(--brass); }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: .01s !important; } }
 </style>
 </head>
@@ -82,9 +133,12 @@
     <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
     <div class="smile"></div>
     <div class="hello" id="hello"></div>
-    <div class="content">
+    <div class="lart"><span id="lcrest"></span><img id="limg" alt="" decoding="async"></div>
+    <div class="leq"><i></i><i></i><i></i><i></i></div>
+
+    <div class="content" id="content">
       <div class="top">
-        <div class="crest"><span id="crest">♪</span><img id="art" alt=""></div>
+        <div class="crest"><span id="crest">♪</span><img id="art" alt="" decoding="async"></div>
         <div class="meta">
           <div class="title" id="title">Nothing playing</div>
           <div class="artist" id="artist">Play something to begin</div>
@@ -92,6 +146,7 @@
         <div><div class="clock" id="clock"></div><div class="date" id="date"></div></div>
       </div>
       <div class="rule"></div>
+      <div class="prog"><span id="tcur"></span><div class="bar" id="bar"><i id="fill"></i></div><span id="tdur"></span></div>
       <div class="mid">
         <div class="vol">
           <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zM16 8.5a5 5 0 0 1 0 7l-1.2-1.2a3.3 3.3 0 0 0 0-4.6z"/></svg>
@@ -107,7 +162,23 @@
       <div class="foot">
         <div class="dots" id="dots" role="group" aria-label="Accent color"></div>
         <div id="err" class="err"></div>
+        <button id="gear" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
         <button id="quit" aria-label="Quit">Quit</button>
+      </div>
+    </div>
+
+    <div class="settings">
+      <div class="shead"><span class="stitle">Settings</span><button id="done">Done</button></div>
+      <label class="field">Name <input type="text" id="name" maxlength="20" spellcheck="false" autocomplete="off"></label>
+      <div class="grid">
+        <button class="sw" data-k="greet"><i></i>Greeting</button>
+        <button class="sw" data-k="live"><i></i>Live song bar</button>
+        <button class="sw" data-k="follow"><i></i>Eyes follow cursor</button>
+        <button class="sw" data-k="react"><i></i>Eyes react to music</button>
+        <button class="sw" data-k="beat"><i></i>Beat sync (beta)</button>
+        <button class="sw" data-k="progress"><i></i>Progress bar</button>
+        <button class="sw" data-k="sounds"><i></i>Sounds</button>
+        <button class="sw" data-k="login"><i></i>Start with Windows</button>
       </div>
     </div>
   </div>
@@ -119,17 +190,17 @@ if (!window.island) {
   document.documentElement.style.background = '#3a1f1f';
   let playing = true, cb = null;
   const art = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a3b3b"/><stop offset="1" stop-color="#1c0d0d"/></linearGradient></defs><rect width="10" height="10" fill="url(#g)"/><circle cx="5" cy="5" r="2.2" fill="none" stroke="#b08d57" stroke-width=".3"/></svg>');
-  const send = () => cb && cb({ title: 'Clair de Lune', artist: 'Claude Debussy', playing, vol: 0.5, art });
+  let pos = 42;
+  const send = () => cb && cb({ title: 'Clair de Lune', artist: 'Claude Debussy', playing, vol: 0.5, pos, dur: 274, art });
   window.island = {
     onMedia: f => { cb = f; setTimeout(send, 500); },
     onCursor: f => document.addEventListener('mousemove', e => f({ x: e.clientX - innerWidth / 2, y: e.clientY - 18 })),
-    hover() {}, quit() {},
-    control: a => { if (a === 'play') { playing = !playing; send(); } }
+    hover() {}, quit() {}, startAudio: () => window.__startAudio && window.__startAudio(), getLogin: () => Promise.resolve(true), setLogin() {},
+    control: a => { if (a === 'play') { playing = !playing; send(); } if (a.startsWith('seek ')) { pos = +a.slice(5); send(); } }
   };
 }
 </script>
 <script>
-const NAME = 'Hasnain';           // change this to whatever you want the greeting to say
 const $ = id => document.getElementById(id);
 const pill = $('pill');
 const ICON = {
@@ -138,27 +209,93 @@ const ICON = {
 };
 $('play').innerHTML = ICON.play;
 
-// open / close
+// ---------- settings ----------
+const DEF = { name: 'Hasnain', greet: true, live: true, follow: true, react: true, beat: false, progress: true, sounds: true };
+let S = { ...DEF }, loginOn = false, isPlaying = false;
+try { S = { ...DEF, ...JSON.parse(localStorage.getItem('settings') || '{}') }; } catch {}
+const save = () => { try { localStorage.setItem('settings', JSON.stringify(S)); } catch {} };
+function syncLive() { pill.classList.toggle('live', isPlaying && S.live); }
+function apply() {
+  syncLive();
+  $('content').classList.toggle('noprog', !S.progress);
+  pill.classList.toggle('noreact', !S.react);
+  if (!S.beat) pill.classList.remove('audio');
+  if (!S.follow) { pill.style.setProperty('--ex', '0px'); pill.style.setProperty('--ey', '0px'); }
+  document.querySelectorAll('.sw').forEach(b => b.classList.toggle('on', !!(b.dataset.k === 'login' ? loginOn : S[b.dataset.k])));
+}
+document.querySelectorAll('.sw').forEach(b => b.onclick = () => {
+  const k = b.dataset.k;
+  if (k === 'login') { loginOn = !loginOn; island.setLogin(loginOn); } else { S[k] = !S[k]; save(); }
+  if ((k === 'react' || k === 'beat') && S.react && S.beat) audioTried = false;
+  apply();
+});
+$('name').value = S.name;
+$('name').addEventListener('input', () => { S.name = $('name').value.trim(); save(); });
+$('gear').onclick = () => pill.classList.add('show-settings');
+$('done').onclick = () => pill.classList.remove('show-settings');
+island.getLogin().then(v => { loginOn = !!v; apply(); });
+apply();
+
+// ---------- open / close ----------
 let closeTimer;
 const open = () => { clearTimeout(closeTimer); pill.classList.add('open'); };
-const close = () => { closeTimer = setTimeout(() => pill.classList.remove('open'), 350); };
-pill.addEventListener('mouseenter', () => { island.hover(true); open(); });
+const close = () => { closeTimer = setTimeout(() => { pill.classList.remove('open', 'show-settings'); }, 350); };
+pill.addEventListener('mouseenter', () => { island.hover(true); if (!pill.classList.contains('open')) sfx.wake(); open(); });
 pill.addEventListener('mouseleave', () => { island.hover(false); close(); });
 
-// greeting on launch
-(function greet() {
-  const h = new Date().getHours();
-  $('hello').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ', ' + NAME;
-  setTimeout(() => { pill.classList.add('greet'); setTimeout(() => pill.classList.remove('greet'), 4500); }, 1200);
-})();
+// ---------- peeks (greeting, charging, low battery) ----------
+// soft synthesized chimes (no audio files)
+let ctx;
+const getCtx = () => { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; };
+function note(freq, at, dur, gain) {
+  try { noteInner(freq, at, dur, gain); } catch (e) {}
+}
+function noteInner(freq, at, dur, gain) {
+  const c = getCtx(), t = c.currentTime + at;
+  [[freq, gain], [freq * 2.01, gain * .25]].forEach(([f, g]) => {
+    const o = c.createOscillator(), v = c.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    v.gain.setValueAtTime(0.0001, t);
+    v.gain.exponentialRampToValueAtTime(g, t + .015);
+    v.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(v); v.connect(c.destination);
+    o.start(t); o.stop(t + dur + .05);
+  });
+}
+let lastWake = 0;
+const sfx = {
+  wake()   { if (!S.sounds || Date.now() - lastWake < 1500) return; lastWake = Date.now(); note(523.25, 0, .5, .05); note(783.99, .09, .7, .045); },
+  tick()   { if (S.sounds) note(880, 0, .16, .03); },
+  hello()  { if (S.sounds) { note(392, 0, .5, .045); note(523.25, .12, .5, .045); note(659.25, .24, .8, .045); } },
+  charge() { if (S.sounds) { note(523.25, 0, .4, .045); note(659.25, .1, .4, .045); note(783.99, .2, .7, .045); } },
+  low()    { if (S.sounds) { note(392, 0, .5, .04); note(311.13, .16, .8, .04); } }
+};
+document.addEventListener('click', e => { if (e.target.closest('button, .bar')) sfx.tick(); });
 
-// eyes follow the cursor
+let peekT;
+function peek(text, mood, ms, snd) {
+  clearTimeout(peekT);
+  $('hello').textContent = text;
+  pill.classList.remove('greet', 'sleepy');
+  pill.classList.add(mood);
+  if (snd) snd();
+  peekT = setTimeout(() => pill.classList.remove('greet', 'sleepy'), ms);
+}
+
+function greetText() {
+  const h = new Date().getHours();
+  return (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (S.name ? ', ' + S.name : '');
+}
+if (S.greet) setTimeout(() => peek(greetText(), 'greet', 4800, sfx.hello), 1200);
+
+// ---------- eyes follow the cursor ----------
 island.onCursor(({ x, y }) => {
+  if (!S.follow) return;
   pill.style.setProperty('--ex', Math.tanh(x / 350) * 10 + 'px');
   pill.style.setProperty('--ey', Math.tanh(y / 300) * 3.5 + 'px');
 });
 
-// volume slider
+// ---------- volume ----------
 const vol = $('vol');
 let dragging = false, lastSend = 0;
 const paint = v => vol.style.setProperty('--v', v + '%');
@@ -169,30 +306,83 @@ vol.addEventListener('input', () => { paint(vol.value); const t = Date.now(); if
 vol.addEventListener('change', sendVol);
 paint(50);
 
-// now playing + album art
-let lastTrack = '';
+// ---------- progress ----------
+let base = { pos: 0, dur: 0, t: Date.now(), playing: false };
+const fmt = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function drawProg() {
+  const has = base.dur > 0;
+  const cur = has ? Math.min(base.dur, base.pos + (base.playing ? (Date.now() - base.t) / 1000 : 0)) : 0;
+  $('fill').style.width = has ? (cur / base.dur * 100) + '%' : '0%';
+  $('tcur').textContent = has ? fmt(cur) : '';
+  $('tdur').textContent = has ? fmt(base.dur) : '';
+}
+setInterval(drawProg, 500);
+$('bar').addEventListener('click', e => {
+  if (!(base.dur > 0)) return;
+  const r = $('bar').getBoundingClientRect();
+  const secs = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * base.dur;
+  base = { ...base, pos: secs, t: Date.now() };
+  drawProg();
+  island.control('seek ' + secs.toFixed(1));
+});
+
+// ---------- eyes react to the music (listens to system audio, never records) ----------
+let audioTried = false, an = null, adata = null, peak = .2, pulse = 0;
+function frame() {
+  const idle = pill.classList.contains('playing') && !pill.classList.contains('open') && S.react && S.beat;
+  if (!idle) { pill.style.setProperty('--pulse', 0); pulse = 0; return setTimeout(() => requestAnimationFrame(frame), 250); }
+  an.getByteFrequencyData(adata);
+  let s = 0; for (let i = 1; i <= 5; i++) s += adata[i];
+  const lv = s / 5 / 255;
+  peak = Math.max(lv, peak * .996);
+  const target = peak > .02 ? Math.max(0, (lv / peak - .55) / .45) : 0;
+  pulse += (target - pulse) * (target > pulse ? .5 : .12);
+  pill.style.setProperty('--pulse', pulse.toFixed(3));
+  requestAnimationFrame(frame);
+}
+window.__startAudio = async () => {
+  if (an) { pill.classList.add('audio'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    stream.getVideoTracks().forEach(t => t.stop());
+    if (!stream.getAudioTracks().length) throw new Error('no audio');
+    const c = getCtx();
+    an = c.createAnalyser(); an.fftSize = 1024; an.smoothingTimeConstant = .65;
+    c.createMediaStreamSource(new MediaStream(stream.getAudioTracks())).connect(an);   // analysis only, not routed to speakers
+    adata = new Uint8Array(an.frequencyBinCount);
+    pill.classList.add('audio');
+    frame();
+  } catch (e) { /* falls back to a gentle rhythmic pulse */ }
+};
+
+// ---------- now playing + album art ----------
+let lastArtSrc = '', offT = 0;
 island.onMedia(m => {
   m = m || {};
   const on = !!m.title;
-  pill.classList.toggle('playing', on && m.playing);
+  // ads and track switches briefly drop the media session: wait before treating it as "stopped"
+  if (on && m.playing) { clearTimeout(offT); offT = 0; isPlaying = true; pill.classList.add('playing'); syncLive(); }
+  else if (isPlaying && !offT) offT = setTimeout(() => { offT = 0; isPlaying = false; pill.classList.remove('playing'); syncLive(); }, 2500);
   $('err').textContent = m.err ? m.err.slice(0, 80) : ''; $('err').title = m.err || '';
   $('title').textContent = on ? m.title : 'Nothing playing';
   $('artist').textContent = on ? (m.artist || 'Unknown artist') : (m.err ? 'Media: ' + m.err.slice(0, 60) : 'Play something to begin');
-  $('crest').textContent = on ? m.title.trim().charAt(0).toUpperCase() : '♪';
-  $('art').style.display = on && m.art ? 'block' : 'none';
-  if (on && m.art) $('art').src = m.art;
+  const letter = on ? m.title.trim().charAt(0).toUpperCase() : '♪';
+  ['crest', 'lcrest'].forEach(id => $(id).textContent = letter);
+  if ('art' in m) lastArtSrc = m.art || '';
+  const showArt = on && lastArtSrc;
+  ['art', 'limg'].forEach(id => { const el = $(id); el.style.display = showArt ? 'block' : 'none'; if (showArt && el.getAttribute('src') !== lastArtSrc) el.src = lastArtSrc; });
   $('play').innerHTML = on && m.playing ? ICON.pause : ICON.play;
   if (typeof m.vol === 'number' && !dragging) { vol.value = Math.round(m.vol * 100); paint(vol.value); }
-  const key = on ? m.title + m.artist : '';
-  if (on && key !== lastTrack) { open(); setTimeout(() => { if (!pill.matches(':hover')) pill.classList.remove('open'); }, 3800); }
-  lastTrack = key;
+  base = { pos: on ? (m.pos || 0) : 0, dur: on ? (m.dur || 0) : 0, t: Date.now(), playing: on && !!m.playing };
+  drawProg();
+  if (on && m.playing && S.react && S.beat && !audioTried) { audioTried = true; island.startAudio(); }
 });
 $('prev').onclick = () => island.control('prev');
 $('play').onclick = () => island.control('play');
 $('next').onclick = () => island.control('next');
 $('quit').onclick = () => island.quit();
 
-// accent colors
+// ---------- accent colors ----------
 const ACCENTS = [['#b08d57', 'Brass'], ['#5f9a7a', 'Racing green'], ['#c07a82', 'Claret rose'], ['#7d97c9', 'Sapphire'], ['#cfc8b4', 'Champagne']];
 const dots = ACCENTS.map(([c, name], i) => {
   const b = document.createElement('button');
@@ -208,7 +398,7 @@ function setAccent(i) {
 let saved = 0; try { saved = +localStorage.getItem('accent') || 0; } catch {}
 setAccent(saved);
 
-// clock + date
+// ---------- clock + date ----------
 function tick() {
   const d = new Date();
   $('clock').textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -216,10 +406,23 @@ function tick() {
 }
 tick(); setInterval(tick, 10000);
 
-// battery
+// ---------- battery: text, charging peek, low-battery sleepy eyes ----------
 if (navigator.getBattery) navigator.getBattery().then(b => {
-  const up = () => $('battery').textContent = Math.round(b.level * 100) + '%' + (b.charging ? ' charging' : '');
-  up(); b.onlevelchange = b.onchargingchange = up;
+  const pct = () => Math.round(b.level * 100);
+  const up = () => {
+    $('battery').textContent = pct() + '%' + (b.charging ? ' charging' : '');
+    pill.classList.toggle('lowbat', b.level <= 0.2 && !b.charging);
+  };
+  const stage = () => b.level <= 0.1 ? 2 : b.level <= 0.2 ? 1 : 0;
+  let warned = stage();
+  up();
+  b.onchargingchange = () => { up(); if (b.charging) { warned = 0; peek('Charging · ' + pct() + '%', 'greet', 3200, sfx.charge); } };
+  b.onlevelchange = () => {
+    up(); if (b.charging) return;
+    const w = stage();
+    if (w > warned) peek('Battery low · ' + pct() + '%', 'sleepy', 4200, sfx.low);
+    warned = w;
+  };
 });
 </script>
 </body>

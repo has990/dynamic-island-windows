@@ -76,6 +76,10 @@ while ($true) {
             if ($c -eq 'play') { [void](Await ($s.TryTogglePlayPauseAsync()) ([bool])) }
             if ($c -eq 'next') { [void](Await ($s.TrySkipNextAsync()) ([bool])) }
             if ($c -eq 'prev') { [void](Await ($s.TrySkipPreviousAsync()) ([bool])) }
+            if ($c -like 'seek *') {
+              $secs = [double]::Parse($c.Substring(5), [Globalization.CultureInfo]::InvariantCulture)
+              [void](Await ($s.TryChangePlaybackPositionAsync([long]($secs * 10000000))) ([bool]))
+            }
           }
         }
       } catch { @{ err = 'command: ' + (Inner $_.Exception) } | ConvertTo-Json -Compress }
@@ -107,6 +111,15 @@ while ($true) {
             $o.title = [string]$p.Title
             $o.artist = [string]$p.Artist
             $o.playing = ($s.GetPlaybackInfo().PlaybackStatus -eq 'Playing')
+            try {
+              $tl = $s.GetTimelineProperties()
+              $dur = $tl.EndTime.TotalSeconds - $tl.StartTime.TotalSeconds
+              $pos = $tl.Position.TotalSeconds - $tl.StartTime.TotalSeconds
+              if ($o.playing) { $el = ([DateTimeOffset]::UtcNow - $tl.LastUpdatedTime).TotalSeconds; if ($el -ge 0 -and $el -lt 21600) { $pos += $el } }
+              if ($pos -lt 0) { $pos = 0 }
+              if ($dur -gt 0 -and $pos -gt $dur) { $pos = $dur }
+              $o.dur = [math]::Round($dur, 1); $o.pos = [math]::Round($pos, 1)
+            } catch { $o.err = 'timeline: ' + (Inner $_.Exception) }
           }
         } catch { $o.err = 'media: ' + (Inner $_.Exception) }
       }
